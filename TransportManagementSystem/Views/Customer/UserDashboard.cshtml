@@ -1,0 +1,221 @@
+﻿@model List<TransportManagementSystem.Models.Booking>
+@using TransportManagementSystem.Models
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        overflow-x: hidden;
+    }
+
+    #bgCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+    }
+
+    .dashboard-wrapper {
+        padding: 60px 40px;
+    }
+
+    .dashboard-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        background: linear-gradient(90deg, #00bcd4, #14b8a6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .book-btn {
+        background: linear-gradient(135deg, #00bcd4, #14b8a6);
+        border: none;
+        padding: 12px 24px;
+        font-weight: 600;
+        border-radius: 12px;
+        transition: 0.3s ease;
+        color: white;
+    }
+
+        .book-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 188, 212, 0.4);
+        }
+
+    .ride-card {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 20px;
+        padding: 25px;
+        transition: 0.4s ease;
+        height: 100%;
+    }
+
+        .ride-card:hover {
+            transform: translateY(-6px);
+            border-color: #00bcd4;
+            box-shadow: 0 20px 40px rgba(0, 188, 212, 0.15);
+        }
+
+    .vehicle-name {
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: 10px;
+        color: #00bcd4;
+    }
+
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 500;
+        display: inline-block;
+    }
+
+    .pending {
+        background: #facc15;
+        color: #000;
+    }
+
+    .confirmed {
+        background: #00bcd4;
+    }
+
+    .completed {
+        background: #22c55e;
+    }
+
+    .empty-box {
+        padding: 40px;
+        text-align: center;
+        background: rgba(255,255,255,0.05);
+        border-radius: 16px;
+        backdrop-filter: blur(10px);
+    }
+</style>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="dashboard-wrapper">
+
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h2 class="dashboard-title">My Ride Dashboard</h2>
+        <a asp-action="BookRide" class="book-btn">
+            + Book New Ride
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="empty-box">
+            <h5>No bookings yet.</h5>
+            <p>Start your first intelligent ride experience.</p>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var booking in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="ride-card">
+
+                        <div class="vehicle-name">
+                            @booking.Vehicle.ModelName
+                        </div>
+
+                        <p>
+                            <strong>From:</strong> @booking.Source <br />
+                            <strong>To:</strong> @booking.Destination
+                        </p>
+
+                        <p>
+                            <strong>Fare:</strong> ₹@booking.TotalFare
+                        </p>
+
+                        <div>
+                            @if (booking.BookingStatus == BookingStatus.Pending)
+                            {
+                                <span class="status-badge pending">
+                                    ⏳ Pending
+                                </span>
+                            }
+                            else if (booking.BookingStatus == BookingStatus.Confirmed)
+                            {
+                                <span class="status-badge confirmed">
+                                    🚗 Confirmed
+                                </span>
+                            }
+                            else if (booking.BookingStatus == BookingStatus.Completed)
+                            {
+                                <span class="status-badge completed">
+                                    ✅ Completed
+                                </span>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    const renderer = new THREE.WebGLRenderer({
+        canvas: document.getElementById('bgCanvas'),
+        alpha: true
+    });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    const geometry = new THREE.BufferGeometry();
+    const vertices = [];
+
+    for (let i = 0; i < 5000; i++) {
+        vertices.push(
+            THREE.MathUtils.randFloatSpread(2000),
+            THREE.MathUtils.randFloatSpread(2000),
+            THREE.MathUtils.randFloatSpread(2000)
+        );
+    }
+
+    geometry.setAttribute('position', new THREE.Float32BufferAttribute(vertices, 3));
+
+    const material = new THREE.PointsMaterial({
+        color: 0x00bcd4,
+        size: 2
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    camera.position.z = 500;
+
+    function animate() {
+        requestAnimationFrame(animate);
+        points.rotation.x += 0.0005;
+        points.rotation.y += 0.0008;
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>

@@ -1,0 +1,261 @@
+﻿@model List<TransportManagementSystem.Models.Vehicle>
+@using TransportManagementSystem.Models
+
+@{
+    ViewData["Title"] = "Vehicle Management";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: #0c1426;
+        color: #e2e8f0;
+        overflow-x: hidden;
+    }
+
+    #vehicleCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+    }
+
+    .page-wrapper {
+        padding: 60px 50px;
+    }
+
+    .page-title {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 40px;
+    }
+
+    .glass-card {
+        background: rgba(255,255,255,0.04);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 40px;
+        transition: 0.3s ease;
+    }
+
+        .glass-card:hover {
+            border-color: #0ea5a4;
+            box-shadow: 0 20px 40px rgba(14,165,164,0.15);
+        }
+
+    .form-control {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: white;
+        border-radius: 12px;
+        padding: 10px 14px;
+    }
+
+        .form-control:focus {
+            border-color: #38bdf8;
+            box-shadow: 0 0 15px rgba(56,189,248,0.3);
+            background: rgba(255,255,255,0.08);
+        }
+
+    .btn-add {
+        background: #22c55e;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 14px;
+        font-weight: 600;
+        color: white;
+        transition: 0.3s ease;
+    }
+
+        .btn-add:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(34,197,94,0.4);
+        }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    thead {
+        background: rgba(255,255,255,0.05);
+    }
+
+    th, td {
+        padding: 14px;
+        text-align: left;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    tr:hover {
+        background: rgba(255,255,255,0.03);
+    }
+
+    .status-badge {
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 500;
+    }
+
+    .Available {
+        background: #22c55e;
+    }
+
+    .OnTrip {
+        background: #38bdf8;
+    }
+
+    .Maintenance {
+        background: #f59e0b;
+    }
+
+    .empty-box {
+        padding: 30px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.05);
+        text-align: center;
+    }
+</style>
+
+<canvas id="vehicleCanvas"></canvas>
+
+<div class="page-wrapper">
+
+    <h2 class="page-title">Vehicle Management</h2>
+
+    <!-- Add Vehicle -->
+    <div class="glass-card">
+        <h4 class="mb-4">Add New Vehicle</h4>
+
+        <form asp-action="AddVehicle" method="post">
+
+            <div class="mb-3">
+                <label class="form-label">Model Name</label>
+                <input name="ModelName" class="form-control" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Plate Number</label>
+                <input name="PlateNumber" class="form-control" required />
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Vehicle Type</label>
+                <select name="VehicleType" class="form-control" required>
+                    <option value="">Select Type</option>
+                    @foreach (VehicleType type in Enum.GetValues(typeof(VehicleType)))
+                    {
+                        <option value="@((int)type)">
+                            @type.ToString()
+                        </option>
+                    }
+                </select>
+            </div>
+
+            <button type="submit" class="btn-add">
+                Add Vehicle
+            </button>
+
+        </form>
+    </div>
+
+
+    <!-- Vehicle List -->
+    <div class="glass-card">
+        <h4 class="mb-4">Existing Vehicles</h4>
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="empty-box">
+                No vehicles added yet.
+            </div>
+        }
+        else
+        {
+            <table>
+                <thead>
+                    <tr>
+                        <th>Model</th>
+                        <th>Plate</th>
+                        <th>Type</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var vehicle in Model)
+                    {
+                        <tr>
+                            <td>@vehicle.ModelName</td>
+                            <td>@vehicle.PlateNumber</td>
+                            <td>@vehicle.VehicleType</td>
+                            <td>
+                                <span class="status-badge @vehicle.Status">
+                                    @vehicle.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+    </div>
+
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+    // Subtle Rotating Plane Field Background
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 1, 2000);
+
+    const renderer = new THREE.WebGLRenderer({
+        canvas: document.getElementById('vehicleCanvas'),
+        alpha: true
+    });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.position.z = 500;
+
+    const group = new THREE.Group();
+
+    const geometry = new THREE.PlaneGeometry(40, 40);
+    const material = new THREE.MeshBasicMaterial({
+        color: 0x0ea5a4,
+        wireframe: true
+    });
+
+    for (let i = 0; i < 100; i++) {
+        const plane = new THREE.Mesh(geometry, material);
+        plane.position.x = (Math.random() - 0.5) * 1000;
+        plane.position.y = (Math.random() - 0.5) * 1000;
+        plane.position.z = (Math.random() - 0.5) * 500;
+        group.add(plane);
+    }
+
+    scene.add(group);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        group.rotation.x += 0.0006;
+        group.rotation.y += 0.0008;
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>

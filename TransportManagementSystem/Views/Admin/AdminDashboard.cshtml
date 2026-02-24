@@ -1,0 +1,211 @@
+﻿@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: #0b1220;
+        color: #e2e8f0;
+        overflow-x: hidden;
+    }
+
+    #adminCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+    }
+
+    .admin-wrapper {
+        padding: 60px 40px;
+    }
+
+    .admin-title {
+        font-size: 2.4rem;
+        font-weight: 700;
+        margin-bottom: 40px;
+        letter-spacing: 1px;
+    }
+
+    .metric-card {
+        background: rgba(255,255,255,0.04);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 20px;
+        padding: 30px;
+        transition: 0.4s ease;
+        height: 100%;
+    }
+
+        .metric-card:hover {
+            transform: translateY(-6px);
+            border-color: #0ea5a4;
+            box-shadow: 0 20px 40px rgba(14,165,164,0.2);
+        }
+
+    .metric-label {
+        font-size: 0.9rem;
+        opacity: 0.7;
+        margin-bottom: 10px;
+    }
+
+    .metric-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #38bdf8;
+    }
+
+    .section-title {
+        margin-top: 60px;
+        font-size: 1.6rem;
+        font-weight: 600;
+        margin-bottom: 25px;
+    }
+
+    .manage-card {
+        background: rgba(255,255,255,0.04);
+        border-radius: 16px;
+        padding: 25px;
+        text-align: center;
+        border: 1px solid rgba(255,255,255,0.08);
+        transition: 0.3s ease;
+        text-decoration: none;
+        color: white;
+        display: block;
+    }
+
+        .manage-card:hover {
+            transform: translateY(-4px);
+            border-color: #38bdf8;
+            box-shadow: 0 15px 30px rgba(56,189,248,0.2);
+        }
+
+        .manage-card h5 {
+            margin: 0;
+            font-weight: 600;
+        }
+</style>
+
+<canvas id="adminCanvas"></canvas>
+
+<div class="admin-wrapper">
+
+    <h2 class="admin-title">Admin Control Center</h2>
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-label">Total Bookings</div>
+                <div class="metric-value">@ViewBag.TotalBookings</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-label">Completed Trips</div>
+                <div class="metric-value">@ViewBag.CompletedBookings</div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="metric-card">
+                <div class="metric-label">Total Drivers</div>
+                <div class="metric-value">@ViewBag.TotalDrivers</div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="section-title">Management Panel</div>
+
+    <div class="row g-4">
+
+        <div class="col-md-3">
+            <a asp-controller="Admin" asp-action="Vehicles" class="manage-card">
+                <h5>Manage Vehicles</h5>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a asp-controller="Admin" asp-action="Drivers" class="manage-card">
+                <h5>Manage Drivers</h5>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a asp-controller="Admin" asp-action="Bookings" class="manage-card">
+                <h5>Manage Bookings</h5>
+            </a>
+        </div>
+
+        <div class="col-md-3">
+            <a asp-controller="Admin" asp-action="Pricing" class="manage-card">
+                <h5>Manage Pricing</h5>
+            </a>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+    // PREMIUM 3D NETWORK GRID BACKGROUND
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+
+    const renderer = new THREE.WebGLRenderer({
+        canvas: document.getElementById('adminCanvas'),
+        alpha: true
+    });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    camera.position.z = 400;
+
+    const group = new THREE.Group();
+
+    const geometry = new THREE.BoxGeometry(5, 5, 5);
+    const material = new THREE.MeshBasicMaterial({
+        color: 0x0ea5a4,
+        wireframe: true
+    });
+
+    const gridSize = 10;
+    const spacing = 40;
+
+    for (let x = -gridSize; x < gridSize; x++) {
+        for (let y = -gridSize; y < gridSize; y++) {
+            const cube = new THREE.Mesh(geometry, material);
+            cube.position.x = x * spacing;
+            cube.position.y = y * spacing;
+            cube.position.z = (Math.random() - 0.5) * 200;
+            group.add(cube);
+        }
+    }
+
+    scene.add(group);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        group.rotation.x += 0.0008;
+        group.rotation.y += 0.001;
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+</script>

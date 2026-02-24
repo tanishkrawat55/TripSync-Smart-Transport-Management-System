@@ -1,0 +1,283 @@
+﻿@model TransportManagementSystem.Models.ViewModels.BookingViewModel
+
+@{
+    ViewData["Title"] = "Book Ride";
+}
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: #0f172a;
+        color: #e2e8f0;
+        overflow-x: hidden;
+    }
+
+    #bgCanvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: -1;
+    }
+
+    .booking-wrapper {
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 40px;
+    }
+
+    .booking-card {
+        width: 100%;
+        max-width: 600px;
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(14px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+        padding: 40px;
+        transition: 0.4s ease;
+    }
+
+    .booking-title {
+        font-size: 2rem;
+        font-weight: 700;
+        margin-bottom: 30px;
+        background: linear-gradient(90deg, #00bcd4, #14b8a6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .form-label {
+        font-weight: 500;
+        margin-bottom: 6px;
+    }
+
+    .form-control {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: white;
+        border-radius: 12px;
+        padding: 10px 14px;
+        transition: 0.3s ease;
+    }
+
+        .form-control:focus {
+            border-color: #00bcd4;
+            box-shadow: 0 0 15px rgba(0,188,212,0.4);
+            background: rgba(255,255,255,0.07);
+        }
+
+    .btn-custom {
+        border: none;
+        border-radius: 14px;
+        padding: 10px 22px;
+        font-weight: 600;
+        transition: 0.3s ease;
+    }
+
+    .btn-check {
+        background: linear-gradient(135deg, #00bcd4, #14b8a6);
+        color: white;
+    }
+
+        .btn-check:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0,188,212,0.4);
+        }
+
+    .btn-book {
+        background: #22c55e;
+        color: white;
+    }
+
+        .btn-book:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(34,197,94,0.4);
+        }
+
+    .result-box {
+        margin-top: 20px;
+        padding: 20px;
+        border-radius: 16px;
+        background: rgba(0, 188, 212, 0.1);
+        border: 1px solid rgba(0,188,212,0.3);
+        display: none;
+        animation: fadeIn 0.4s ease;
+    }
+
+    
+</style>
+
+<canvas id="bgCanvas"></canvas>
+
+<div class="booking-wrapper">
+    <div class="booking-card">
+
+        <h2 class="booking-title">Book Your Ride</h2>
+
+        <form method="post" asp-action="ConfirmBooking">
+
+            <div class="mb-4">
+                <label class="form-label">Pickup Location</label>
+                <input asp-for="Source" class="form-control" id="source" required />
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Drop Location</label>
+                <input asp-for="Destination" class="form-control" id="destination" required />
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Select Vehicle</label>
+                <select asp-for="VehicleId" class="form-control" id="vehicleSelect" required>
+                    <option value="">Select Vehicle</option>
+                </select>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="button" class="btn-custom btn-check" onclick="checkFare()">
+                    Check Fare
+                </button>
+
+                <button type="submit" class="btn-custom btn-book">
+                    Book Ride
+                </button>
+            </div>
+
+            <div id="result" class="result-box">
+                <p><strong>Distance:</strong> <span id="distanceText"></span> km</p>
+                <p><strong>Estimated Fare:</strong> ₹<span id="fareText"></span></p>
+            </div>
+
+        </form>
+
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+<script>
+    // ===============================
+    // USER DASHBOARD PARTICLE BACKGROUND
+    // ===============================
+
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(
+        75,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        1000
+    );
+
+    const renderer = new THREE.WebGLRenderer({
+        canvas: document.getElementById('bgCanvas'),
+        alpha: true
+    });
+
+    renderer.setSize(window.innerWidth, window.innerHeight);
+
+    // Particle Geometry (Same as User Dashboard)
+    const geometry = new THREE.BufferGeometry();
+    const vertices = [];
+
+    for (let i = 0; i < 5000; i++) {
+        vertices.push(
+            THREE.MathUtils.randFloatSpread(2000),
+            THREE.MathUtils.randFloatSpread(2000),
+            THREE.MathUtils.randFloatSpread(2000)
+        );
+    }
+
+    geometry.setAttribute(
+        'position',
+        new THREE.Float32BufferAttribute(vertices, 3)
+    );
+
+    const material = new THREE.PointsMaterial({
+        color: 0x00bcd4,
+        size: 2
+    });
+
+    const points = new THREE.Points(geometry, material);
+    scene.add(points);
+
+    camera.position.z = 500;
+
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Smooth subtle motion
+        points.rotation.x += 0.0005;
+        points.rotation.y += 0.0008;
+
+        renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+
+    // ===============================
+    // EXISTING BOOKING LOGIC (UNCHANGED)
+    // ===============================
+
+    document.addEventListener("DOMContentLoaded", function () {
+
+        fetch('/Customer/GetAllAvailableVehicles')
+            .then(response => response.json())
+            .then(data => {
+
+                var vehicleDropdown = document.getElementById("vehicleSelect");
+                vehicleDropdown.innerHTML = '<option value="">Select Vehicle</option>';
+
+                data.forEach(function (vehicle) {
+                    var option = document.createElement("option");
+                    option.value = vehicle.vehicleId;
+                    option.text = vehicle.modelName;
+                    vehicleDropdown.appendChild(option);
+                });
+            });
+
+    });
+
+    function checkFare() {
+
+        var source = document.getElementById("source").value;
+        var destination = document.getElementById("destination").value;
+        var vehicleId = document.getElementById("vehicleSelect").value;
+
+        if (!source || !destination || !vehicleId) {
+            alert("Please fill all fields.");
+            return;
+        }
+
+        fetch('/Customer/GetEstimatedFare?source=' + source +
+              '&destination=' + destination +
+              '&vehicleId=' + vehicleId,
+        {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            document.getElementById("distanceText").innerText = data.distance.toFixed(2);
+            document.getElementById("fareText").innerText = data.fare.toFixed(2);
+
+            document.getElementById("result").style.display = "block";
+        });
+    }
+</script>

@@ -1,0 +1,44 @@
+﻿@model List<TransportManagementSystem.Models.Booking>
+
+@{
+    ViewData["Title"] = "Driver Dashboard";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Assigned Trips</h2>
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            No assigned trips.
+        </div>
+    }
+    else
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Customer</th>
+                    <th>Vehicle</th>
+                    <th>Pickup</th>
+                    <th>Drop</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var trip in Model)
+                {
+                    <tr>
+                        <td>@trip.User.FullName</td>
+                        <td>@trip.Vehicle.ModelName</td>
+                        <td>@trip.Source</td>
+                        <td>@trip.Destination</td>
+                        <td>@trip.BookingStatus</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+</div>
