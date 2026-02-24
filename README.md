@@ -1,4 +1,4 @@
-# 🚚 TripSync – Smart Transport Management System (TMS)
+# 🚚 TripSync – Smart Transport Management System
 
 A modern **Transport Management System** built using **ASP.NET Core Razor Pages (.NET 8)** to manage vehicles, drivers, routes, and trip operations efficiently.
 Designed for **students, demos, and portfolio projects**, with easy local setup using **SQL Server (SSMS)**.
